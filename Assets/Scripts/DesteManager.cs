@@ -71,4 +71,8 @@ public class DesteManager : MonoBehaviour
             }
         }
     }
+    public int kalanTasSayisi()
+    {
+        return aktifDeste.Count;
+    }
 }
