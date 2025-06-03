@@ -384,7 +384,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d488e7de90741d04c885a8d9ce17efc6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tasVeritabani: {fileID: 11400000, guid: a943029b264c97e49a30dd217a99641d, type: 2}
+  TasVeritabani: {fileID: 11400000, guid: a943029b264c97e49a30dd217a99641d, type: 2}
 --- !u!1 &1704619315
 GameObject:
   m_ObjectHideFlags: 0
@@ -419,6 +419,7 @@ MonoBehaviour:
   oyuncular: []
   gostergeTasi: {fileID: 0}
   okeyTasi: {fileID: 0}
+  atilanTaslarYigini: []
 --- !u!4 &1704619317
 Transform:
   m_ObjectHideFlags: 0

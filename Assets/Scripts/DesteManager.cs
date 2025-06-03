@@ -5,13 +5,13 @@ using System.Linq;
 public class DesteManager : MonoBehaviour
 {
     [Header("Veri Kaynaðý")]
-    public TasVeritabani tasVeritabani; 
+    public TasVeritabani TasVeritabani; 
 
     private List<Tas> aktifDeste = new List<Tas>(); 
 
     void Start()
     {
-        if (tasVeritabani == null)
+        if (TasVeritabani == null)
         {
             Debug.LogError("DesteManager: TasVeritabani atanmamýþ!");
             return;
@@ -24,7 +24,7 @@ public class DesteManager : MonoBehaviour
     {
         aktifDeste.Clear(); 
 
-        foreach (Tas tasSO in tasVeritabani.tumTaslar)
+        foreach (Tas tasSO in TasVeritabani.tumTaslar)
         {
             aktifDeste.Add(tasSO);
         }
@@ -71,7 +71,7 @@ public class DesteManager : MonoBehaviour
             }
         }
     }
-    public int kalanTasSayisi()
+    public int KalanTasSayisi()
     {
         return aktifDeste.Count;
     }
