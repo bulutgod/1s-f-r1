@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 [System.Serializable]
 public class Oyuncu
@@ -7,12 +8,15 @@ public class Oyuncu
     public string oyuncuAdi;
     public List<Tas> eli = new List<Tas>();
     public bool ilkOyuncuMu = false;
+    public int cipMiktari = 0;
+    public bool ciftAcilmisMi = false;
 
-    public Oyuncu(string ad, bool ilkMi = false)
+    public Oyuncu(string ad, bool ilkMi = false, int baslangicCip = 0)
     {
         oyuncuAdi = ad;
         eli = new List<Tas>();
         ilkOyuncuMu = ilkMi;
+        cipMiktari = baslangicCip;
     }
 
     public void EliniTemizle()
@@ -27,28 +31,12 @@ public class Oyuncu
             eli.Add(tas);
         }
     }
-
-    public void EliniGoster()
+    public bool CiftAcilabilirMi()
     {
-        Debug.Log("---- " + oyuncuAdi + " Eli (" + eli.Count + " taþ) ----");
-        if (eli.Count == 0)
-        {
-            Debug.Log("(Boþ el)");
-        }
-        else
-        {
-            foreach (Tas tasInEli in eli) // 'tas' zaten Tas.cs'de kullanýlýyor, karýþýklýk olmasýn diye 'tasInEli' yaptým.
-            {
-                if (tasInEli != null)
-                {
-                    Debug.Log(tasInEli.ToString());
-                }
-                else
-                {
-                    Debug.Log("(Null Taþ Referansý!)");
-                }
-            }
-        }
-        Debug.Log("--------------------------");
+        var el = this.eli;
+        var ciftler = el.GroupBy(t => t.sayi)
+                        .Where(g => g.Count() == 2)
+                        .Count();
+        return ciftler == 5;
     }
 }

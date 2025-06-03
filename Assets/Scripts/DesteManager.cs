@@ -1,13 +1,13 @@
 using UnityEngine;
-using System.Collections.Generic; 
-using System.Linq; 
+using System.Collections.Generic;
+using System.Linq;
 
 public class DesteManager : MonoBehaviour
 {
     [Header("Veri Kaynaðý")]
-    public TasVeritabani TasVeritabani; 
+    public TasVeritabani TasVeritabani;
 
-    private List<Tas> aktifDeste = new List<Tas>(); 
+    private List<Tas> aktifDeste = new List<Tas>();
 
     void Start()
     {
@@ -17,19 +17,17 @@ public class DesteManager : MonoBehaviour
             return;
         }
         DesteOlusturVeKaristir();
-        TestDeste();
     }
 
     public void DesteOlusturVeKaristir()
     {
-        aktifDeste.Clear(); 
+        aktifDeste.Clear();
 
         foreach (Tas tasSO in TasVeritabani.tumTaslar)
         {
             aktifDeste.Add(tasSO);
         }
 
-        
         System.Random rng = new System.Random();
         int n = aktifDeste.Count;
         while (n > 1)
@@ -40,37 +38,20 @@ public class DesteManager : MonoBehaviour
             aktifDeste[k] = aktifDeste[n];
             aktifDeste[n] = deger;
         }
-
-        Debug.Log("Deste oluþturuldu ve karýþtýrýldý. Toplam taþ: " + aktifDeste.Count);
     }
 
     public Tas TasCek()
     {
         if (aktifDeste.Count == 0)
         {
-            Debug.LogWarning("Destede çekilecek taþ kalmadý!");
-            return null; 
+            return null;
         }
 
-        
         Tas cekilenTas = aktifDeste[aktifDeste.Count - 1];
-        aktifDeste.RemoveAt(aktifDeste.Count - 1); 
-
+        aktifDeste.RemoveAt(aktifDeste.Count - 1);
         return cekilenTas;
     }
 
-    void TestDeste()
-    {
-        if (aktifDeste.Count > 0)
-        {
-            Debug.Log("Destenin en üstündeki ilk 5 taþ (karýþtýrýldýktan sonra):");
-            for (int i = 0; i < Mathf.Min(5, aktifDeste.Count); i++)
-            {
-                
-                Debug.Log((i + 1) + ". Çekilecek Taþ: " + aktifDeste[aktifDeste.Count - 1 - i].ToString());
-            }
-        }
-    }
     public int KalanTasSayisi()
     {
         return aktifDeste.Count;

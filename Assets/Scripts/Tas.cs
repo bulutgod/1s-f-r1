@@ -12,7 +12,6 @@ public enum TasTipi
     Sayi,
     SahteOkey,
 }
-// Unity editöründe Assets > Create menüsünden yeni Tas nesneleri oluþturabilmek için:
 [CreateAssetMenu(fileName = "Yeni Tas", menuName = "101 Okey/Tas Tanim")]
 
 public class Tas : ScriptableObject
