@@ -15,4 +15,4 @@ MonoBehaviour:
   renk: 2
   sayi: 3
   tip: 0
-  tasGorseli: {fileID: 0}
+  tasGorseli: {fileID: 21300000, guid: d5ce6cc0e780f0b4ab23f5e084fc93df, type: 3}
