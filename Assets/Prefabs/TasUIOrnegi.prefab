@@ -147,6 +147,8 @@ GameObject:
   - component: {fileID: 993032663179799497}
   - component: {fileID: 5266346383594515088}
   - component: {fileID: 2921735973203430}
+  - component: {fileID: 7339452503637454195}
+  - component: {fileID: 4797629361306178641}
   m_Layer: 5
   m_Name: TasUIOrnegi
   m_TagString: Untagged
@@ -212,3 +214,29 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &7339452503637454195
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8418287353197651855}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a21b0398f025c84aa1b4866d674086c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  temsilEttigiTas: {fileID: 0}
+  uiManagerReferansi: {fileID: 0}
+--- !u!225 &4797629361306178641
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8418287353197651855}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0

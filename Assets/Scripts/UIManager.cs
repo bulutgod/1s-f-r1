@@ -6,9 +6,10 @@ using System.Collections.Generic;
 
 public class UIManager : MonoBehaviour
 {
+    private UITasEtkilesimi _aktifSeciliTasUI = null;
     [Header("Bağlantılar")]
     public GameManager gameManager; 
-
+    
     [Header("Oyuncu eli UI Baglantilar")]
     public GameObject tasUIPrefab;
     public Transform oyuncu1ElPaneliTransform;
@@ -51,11 +52,24 @@ public class UIManager : MonoBehaviour
 
                 GameObject yeniTasUIObjesi = Instantiate(tasUIPrefab, oyuncu1ElPaneliTransform);
                 yeniTasUIObjesi.name = tasVerisi.ToString();
+                UITasEtkilesimi tasEtkilesimScripti = yeniTasUIObjesi.GetComponent<UITasEtkilesimi>();
+                if (tasEtkilesimScripti != null)
+                {
+                    tasEtkilesimScripti.Ayarla(tasVerisi, this);
+                }
 
                 Image tasResmi = yeniTasUIObjesi.GetComponent<Image>();
                 TextMeshProUGUI sayiText = yeniTasUIObjesi.GetComponentInChildren<TextMeshProUGUI>();
+                if (tasEtkilesimScripti != null && tasEtkilesimScripti == _aktifSeciliTasUI)
+                {
+                    
+                    if (tasResmi != null)
+                    {
+                        
+                        tasResmi.color = Color.Lerp(tasResmi.color, Color.yellow, 0.3f);
+                    }
+                }
 
-                
                 bool buTasOElinOkeyiMi = false;
                 if (gameManager != null && gameManager.okeyTasi != null && tasVerisi == gameManager.okeyTasi)
                 {
@@ -79,7 +93,7 @@ public class UIManager : MonoBehaviour
                  
                     if (buTasOElinOkeyiMi)
                     {
-                        // tasResmi.color = new Color(0.8f, 0.8f, 1f); // Açık eflatun gibi bir okey arka planı
+                        
                     }
                 }
 
@@ -119,6 +133,23 @@ public class UIManager : MonoBehaviour
         foreach (Transform cocukTas in elPaneli)
         {
             Destroy(cocukTas.gameObject);
+        }
+    }
+    public void OyuncuTasAtti(Tas atilanTasDetayi)
+    {
+        if (gameManager != null)
+        {
+            bool basariliMi = gameManager.SiraKimdeyseOAtar(atilanTasDetayi); 
+            if (basariliMi)
+            {
+                
+                Debug.Log("UIManager: Oyuncu " + atilanTasDetayi.ToString() + " taşını attı (GameManager'a iletildi).");
+            }
+            else
+            {
+                
+                Debug.LogWarning("UIManager: Taş atma işlemi GameManager tarafından onaylanmadı.");
+            }
         }
     }
 }
