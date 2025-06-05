@@ -1,53 +1,69 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.Linq; 
+using System.Linq;
 
 public class GameManager : MonoBehaviour
 {
-    [Header("Baglantilar")]
+    [Header("Baðlantýlar")]
     public DesteManager desteManager;
+    public UIManager uiManager;
 
-    [Header("Oyun Ayarlari")]
+    [Header("Oyun Ayarlarý")]
     public int oyuncuSayisi = 4;
     public List<Oyuncu> oyuncular = new List<Oyuncu>();
 
     [Header("Oyun Durumu")]
     public Tas gostergeTasi;
-    public Tas okeyTasi;
+    public Tas okeyTasi; 
+
     private int aktifOyuncuIndex = 0;
     public List<Tas> atilanTaslarYigini = new List<Tas>();
     private int oynananElSayisiBuTurda = 0;
 
-    [Header("UI Yonetimi")]
-    public UIManager uiManager;
+    
+    public int AktifOyuncuIndex
+    {
+        get { return aktifOyuncuIndex; }
+    }
 
     void Start()
     {
+        
         if (desteManager == null)
         {
-            Debug.LogError("GameManager: DesteManager atanmamis!");
+            Debug.LogError("GameManager: DesteManager atanmamýþ! Lütfen Inspector üzerinden atayýn.");
+            enabled = false; 
             return;
         }
         if (uiManager == null)
         {
             Debug.LogError("GameManager: UIManager atanmamýþ! Lütfen Inspector üzerinden atayýn.");
+            enabled = false;
             return;
         }
+
         OyunuBaslat();
     }
 
     public void OyunuBaslat()
     {
-        Debug.Log("Oyun Baþlatýlýyor...");
+        Debug.Log("---------------- OYUN BAÞLATILIYOR ----------------");
 
         oyuncular.Clear();
         atilanTaslarYigini.Clear();
         oynananElSayisiBuTurda = 0;
         aktifOyuncuIndex = 0;
+        gostergeTasi = null;
+        okeyTasi = null;
 
+       
+        desteManager.DesteOlusturVeKaristir();
+        Debug.Log("Deste oluþturuldu ve karýþtýrýldý. Toplam taþ: " + desteManager.KalanTasSayisi());
+
+        
         for (int i = 0; i < oyuncuSayisi; i++)
         {
-            Oyuncu yeniOyuncu = new Oyuncu("Oyuncu " + (i + 1), i == 0, 1000);
+            Oyuncu yeniOyuncu = new Oyuncu("Oyuncu " + (i + 1), i == 0, 1000); 
             oyuncular.Add(yeniOyuncu);
         }
         Debug.Log(oyuncuSayisi + " adet oyuncu oluþturuldu.");
@@ -66,49 +82,32 @@ public class GameManager : MonoBehaviour
                 else
                 {
                     Debug.LogError("HATA: Deste bitti ancak hala taþ daðýtýlmaya çalýþýlýyor! Oyuncu: " + oyuncular[i].oyuncuAdi);
-                    break;
+                    return;
                 }
             }
         }
 
-        Debug.Log("Taþ daðýtýmý tamamlandý. Oyuncu elleri (Konsol):");
+        Debug.Log("Taþ daðýtýmý tamamlandý.");
         foreach (Oyuncu oyuncu in oyuncular)
         {
             Debug.Log(oyuncu.oyuncuAdi + " elindeki taþ sayýsý: " + oyuncu.eli.Count);
-             
+            
         }
 
         GostergeVeOkeyBelirle();
-
-        if (desteManager != null)
+        if (this.okeyTasi == null) 
         {
-            
-            Debug.Log("Destede kalan taþ sayýsý (Gösterge sonrasý): " + desteManager.KalanTasSayisi());
+            Debug.LogError("Okey taþý belirlenemediði için oyun baþlatýlamýyor.");
+            return;
         }
 
-        if (uiManager != null && oyuncular.Count > 0)
-        {
-            uiManager.Oyuncu1EliniGoster(oyuncular[0]);
-        }
 
-        // Tur simülasyonunu baþlat
-        oynananElSayisiBuTurda = 0;
-        aktifOyuncuIndex = 0;
+        Debug.Log("Destede kalan taþ sayýsý (Gösterge sonrasý): " + desteManager.KalanTasSayisi());
 
-        Debug.Log("Oyun kurulumu tamamlandý. Ýlk tur baþlýyor...");
+        GuncelOyuncununEliniUIDaGoster();
 
-        if (oyuncular.Count > 0 && oyuncular[aktifOyuncuIndex].ilkOyuncuMu)
-        {
-            IlkOyuncuTurunuOyna();
-        }
-        else if (oyuncular.Count > 0)
-        {
-            NormalOyuncuTurunuOyna();
-        }
-        else
-        {
-            Debug.LogError("Oyuncu bulunamadý, oyun baþlatýlamýyor!");
-        }
+        Debug.Log("Oyun kurulumu tamamlandý. Oyuncu " + (oyuncular[aktifOyuncuIndex].oyuncuAdi) + "'in hamlesi bekleniyor...");
+        
     }
 
     void GostergeVeOkeyBelirle()
@@ -126,37 +125,35 @@ public class GameManager : MonoBehaviour
                 this.okeyTasi = null;
                 return;
             }
-
             potansiyelGosterge = desteManager.TasCek();
             denemeSayaci++;
 
             if (potansiyelGosterge == null && desteManager.KalanTasSayisi() > 0)
             {
-                Debug.LogWarning("Potansiyel gösterge null geldi ama destede hala taþ var. Tekrar deneniyor. Deneme: " + denemeSayaci);
+                Debug.LogWarning("Potansiyel gösterge null geldi ama destede hala taþ var. Tekrar deneniyor.");
                 continue;
             }
 
             if (potansiyelGosterge != null && potansiyelGosterge.tip == TasTipi.SahteOkey)
             {
-                Debug.Log("Gösterge için Sahte Okey çekildi (" + potansiyelGosterge.ToString() + "). Bu taþ geçerli gösterge deðil, yeni gösterge çekilecek. Deneme: " + denemeSayaci);
+                Debug.Log("Gösterge için Sahte Okey çekildi (" + potansiyelGosterge.ToString() + "). Bu taþ geçerli gösterge deðil, yeni gösterge çekilecek.");
                 potansiyelGosterge = null;
             }
 
             if (denemeSayaci > MAKSIMUM_GOSTERGE_DENEMESI)
             {
-                Debug.LogError("GÖSTERGE BELÝRLENEMEDÝ: Maksimum deneme sayýsýna ulaþýldý (" + MAKSIMUM_GOSTERGE_DENEMESI + "). Destede uygun gösterge bulunamadý.");
+                Debug.LogError("GÖSTERGE BELÝRLENEMEDÝ: Maksimum deneme sayýsýna ulaþýldý. Destede uygun gösterge bulunamadý.");
                 this.gostergeTasi = null;
                 this.okeyTasi = null;
                 return;
             }
-
         } while (potansiyelGosterge == null || potansiyelGosterge.tip == TasTipi.SahteOkey);
 
         this.gostergeTasi = potansiyelGosterge;
 
         if (this.gostergeTasi == null)
         {
-            Debug.LogError("GÖSTERGE TAÞI HALA NULL! OKEY BELÝRLENEMEYECEK.");
+            Debug.LogError("GÖSTERGE TAÞI BELÝRLENEMEDÝ (SON KONTROL)!");
             this.okeyTasi = null;
             return;
         }
@@ -176,7 +173,6 @@ public class GameManager : MonoBehaviour
         }
 
         this.okeyTasi = null;
-
         if (desteManager.TasVeritabani != null)
         {
             this.okeyTasi = desteManager.TasVeritabani.tumTaslar.FirstOrDefault(t =>
@@ -200,243 +196,63 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void OyuncuCiftAcmakIstedi(Oyuncu oyuncu)
+    
+    public bool SiraKimdeyseOAtar(Tas atilanTas)
     {
-        if (oyuncu == null) return;
-
-        if (oyuncu.CiftAcilabilirMi())
+        if (oyuncular.Count == 0 || aktifOyuncuIndex >= oyuncular.Count)
         {
-            oyuncu.ciftAcilmisMi = true;
-            Debug.Log(oyuncu.oyuncuAdi + " çift açtý!");
-        }
-        else
-        {
-            Debug.Log(oyuncu.oyuncuAdi + " çift açmayý denedi ama yeterli çifti yok.");
-        }
-    }
-
-    void IlkOyuncuTurunuOyna()
-    {
-        if (oyuncular.Count == 0 || aktifOyuncuIndex >= oyuncular.Count || !oyuncular[aktifOyuncuIndex].ilkOyuncuMu)
-        {
-            Debug.LogError("IlkOyuncuTurunuOyna çaðrýldý ama koþullar uygun deðil.");
-            return;
+            Debug.LogError("SiraKimdeyseOAtar: Geçerli aktif oyuncu yok!");
+            return false;
         }
 
-        Oyuncu ilkOyuncu = oyuncular[aktifOyuncuIndex];
-        Debug.Log("---- " + ilkOyuncu.oyuncuAdi + " (Ýlk Tur) Oynuyor ----");
+        Oyuncu oynayanOyuncu = oyuncular[aktifOyuncuIndex];
 
-        if (ilkOyuncu.eli.Count == 22) 
+        if (atilanTas == null)
         {
-            int atilacakIndex = -1; 
+            Debug.LogError(oynayanOyuncu.oyuncuAdi + " null bir taþ atmaya çalýþtý!");
+            GuncelOyuncununEliniUIDaGoster();
+            return false;
+        }
 
-            if (ilkOyuncu.eli.Count == 1) 
-            {
-                atilacakIndex = 0;
-            }
-            else if (ilkOyuncu.eli.Count > 1) 
-            {
-                Tas sonTas = ilkOyuncu.eli[ilkOyuncu.eli.Count - 1];
-                bool sonTasDegerliMi = (this.okeyTasi != null && sonTas == this.okeyTasi) || (sonTas.tip == TasTipi.SahteOkey);
+        
+        if (oynayanOyuncu.eli.Contains(atilanTas))
+        {
+            
 
-                if (sonTasDegerliMi)
-                {
-                    bool degersizTasBulundu = false;
-                    for (int k = 0; k < ilkOyuncu.eli.Count; k++)
-                    {
-                        Tas potansiyelTas = ilkOyuncu.eli[k];
-                        
-                        bool potansiyelTasDegerliMi = (this.okeyTasi != null && potansiyelTas == this.okeyTasi) || (potansiyelTas.tip == TasTipi.SahteOkey);
-                        if (!potansiyelTasDegerliMi)
-                        {
-                            atilacakIndex = k;
-                            degersizTasBulundu = true;
-                            break;
-                        }
-                    }
-                    if (!degersizTasBulundu) 
-                    {
-                        atilacakIndex = ilkOyuncu.eli.Count - 1;
-                    }
-                }
-                else 
-                {
-                    atilacakIndex = ilkOyuncu.eli.Count - 1;
-                }
-            }
+            oynayanOyuncu.eli.Remove(atilanTas);
+            atilanTaslarYigini.Add(atilanTas);
+
+            Debug.Log(oynayanOyuncu.oyuncuAdi + " UI üzerinden sürükleyerek þu taþý attý: " + atilanTas.ToString());
+
+            if (atilanTaslarYigini.Count > 0)
+                Debug.Log("Yandaki Son Taþ (Atýlan): " + atilanTaslarYigini[atilanTaslarYigini.Count - 1].ToString());
+
+            GuncelOyuncununEliniUIDaGoster();
 
             
-            if (atilacakIndex != -1 && atilacakIndex < ilkOyuncu.eli.Count)
-            {
-                Tas atilanTas = ilkOyuncu.eli[atilacakIndex]; 
 
-                if (atilanTas != null) 
-                {
-                    ilkOyuncu.eli.RemoveAt(atilacakIndex); 
-                    atilanTaslarYigini.Add(atilanTas);     
-
-                    Debug.Log(ilkOyuncu.oyuncuAdi + " þu taþý attý: " + atilanTas.ToString() + " (elinden index: " + atilacakIndex + ")");
-
-                    if (atilanTaslarYigini.Count > 0)
-                        Debug.Log("Yandaki Son Taþ: " + atilanTaslarYigini[atilanTaslarYigini.Count - 1].ToString());
-
-                    if (aktifOyuncuIndex == 0 && uiManager != null)
-                    {
-                        uiManager.Oyuncu1EliniGoster(ilkOyuncu);
-                    }
-                }
-                else
-                {
-                   
-                    Debug.LogError(ilkOyuncu.oyuncuAdi + " elinden null bir taþ atmaya çalýþtý! Index: " + atilacakIndex + ". Bu beklenmedik bir durum, TasVeritabani veya TasaEkle kontrol edilmeli.");
-                    
-                    ilkOyuncu.eli.RemoveAt(atilacakIndex);
-                }
-            }
-            else
-            {
-                Debug.LogError(ilkOyuncu.oyuncuAdi + " için ilk turda atýlacak geçerli bir taþ index'i bulunamadý! El Sayýsý: " + ilkOyuncu.eli.Count);
-            }
+            SonrakiOyuncununHamlesiniBaslat();
+            return true;
         }
         else
         {
-            Debug.LogWarning(ilkOyuncu.oyuncuAdi + " ilk oyuncu olmasýna raðmen 22 (veya >0) taþý yok! El sayýsý: " + ilkOyuncu.eli.Count);
+            Debug.LogError(oynayanOyuncu.oyuncuAdi + " elinde olmayan bir taþý (" + atilanTas.ToString() + ") atmaya çalýþtý! El kontrol ediliyor.");
+            
+            GuncelOyuncununEliniUIDaGoster();
+            return false;
         }
-
-        SonrakiOyuncununHamlesiniBaslat();
     }
-
-
-    void NormalOyuncuTurunuOyna()
-    {
-        if (oyuncular.Count == 0 || aktifOyuncuIndex >= oyuncular.Count) return;
-
-        Oyuncu siradakiOyuncu = oyuncular[aktifOyuncuIndex];
-        Debug.Log("---- " + siradakiOyuncu.oyuncuAdi + " Oynuyor ----");
-
-        bool yandanTasAldi = false;
-        Tas sonYereAtilanTas = null;
-
-        if (atilanTaslarYigini.Count > 0)
-        {
-            sonYereAtilanTas = atilanTaslarYigini[atilanTaslarYigini.Count - 1];
-            if (OyuncuYandanAlmakIsterMi(siradakiOyuncu, sonYereAtilanTas))
-            {
-                siradakiOyuncu.TasaEkle(sonYereAtilanTas);
-                atilanTaslarYigini.RemoveAt(atilanTaslarYigini.Count - 1);
-                yandanTasAldi = true;
-                Debug.Log(siradakiOyuncu.oyuncuAdi + " yandan þu taþý aldý: " + sonYereAtilanTas.ToString());
-            }
-        }
-
-        if (!yandanTasAldi)
-        {
-            if (desteManager.KalanTasSayisi() > 0)
-            {
-                Tas cekilenTas = desteManager.TasCek();
-                
-                siradakiOyuncu.TasaEkle(cekilenTas);
-                if (cekilenTas != null)
-                { 
-                    Debug.Log(siradakiOyuncu.oyuncuAdi + " yerden þu taþý çekti: " + cekilenTas.ToString());
-                }
-                else
-                {
-                    Debug.LogWarning(siradakiOyuncu.oyuncuAdi + " yerden null bir taþ çekti (deste bitti ve sonrasýnda çekmeye çalýþtý).");
-                }
-            }
-            else
-            {
-                Debug.LogWarning(siradakiOyuncu.oyuncuAdi + " yerden taþ çekemedi, destede taþ kalmamýþ!");
-            }
-        }
-
-        if (aktifOyuncuIndex == 0 && uiManager != null)
-        {
-            uiManager.Oyuncu1EliniGoster(siradakiOyuncu);
-        }
-
-      
-        Tas atilanTasNormalTur = null; 
-        if (siradakiOyuncu.eli.Count > 0)
-        {
-            int atilacakIndexNormalTur = -1; 
-
-            if (siradakiOyuncu.eli.Count == 1)
-            {
-                atilacakIndexNormalTur = 0;
-            }
-            else
-            {
-                Tas sonTas = siradakiOyuncu.eli[siradakiOyuncu.eli.Count - 1];
-                bool sonTasDegerliMi = (this.okeyTasi != null && sonTas == this.okeyTasi) || (sonTas.tip == TasTipi.SahteOkey);
-                if (sonTasDegerliMi)
-                {
-                    bool degersizTasBulundu = false;
-                    for (int k = 0; k < siradakiOyuncu.eli.Count; k++)
-                    {
-                        Tas potansiyelTas = siradakiOyuncu.eli[k];
-                        bool potansiyelTasDegerliMi = (this.okeyTasi != null && potansiyelTas == this.okeyTasi) || (potansiyelTas.tip == TasTipi.SahteOkey);
-                        if (!potansiyelTasDegerliMi)
-                        {
-                            atilacakIndexNormalTur = k;
-                            degersizTasBulundu = true;
-                            break;
-                        }
-                    }
-                    if (!degersizTasBulundu)
-                    {
-                        atilacakIndexNormalTur = siradakiOyuncu.eli.Count - 1;
-                    }
-                }
-                else
-                {
-                    atilacakIndexNormalTur = siradakiOyuncu.eli.Count - 1;
-                }
-            }
-
-            if (atilacakIndexNormalTur != -1 && atilacakIndexNormalTur < siradakiOyuncu.eli.Count)
-            {
-                atilanTasNormalTur = siradakiOyuncu.eli[atilacakIndexNormalTur];
-                siradakiOyuncu.eli.RemoveAt(atilacakIndexNormalTur); 
-               
-                if (atilanTasNormalTur != null)
-                {
-                    atilanTaslarYigini.Add(atilanTasNormalTur);
-                    Debug.Log(siradakiOyuncu.oyuncuAdi + " þu taþý attý: " + atilanTasNormalTur.ToString() + " (elinden index: " + atilacakIndexNormalTur + ")");
-                    if (atilanTaslarYigini.Count > 0)
-                        Debug.Log("Yandaki Son Taþ: " + atilanTaslarYigini[atilanTaslarYigini.Count - 1].ToString());
-                }
-                else
-                {
-                    Debug.LogError(siradakiOyuncu.oyuncuAdi + " null bir taþ atmaya çalýþtý (Normal Tur)! Atýlacak Index: " + atilacakIndexNormalTur);
-                }
-            }
-            else
-            {
-                Debug.LogError(siradakiOyuncu.oyuncuAdi + " için atýlacak geçerli bir taþ index'i bulunamadý! El Sayýsý: " + siradakiOyuncu.eli.Count);
-            }
-        }
-        else
-        {
-            Debug.LogWarning(siradakiOyuncu.oyuncuAdi + " elinde atacak taþý kalmadý!");
-        }
-
-        if (aktifOyuncuIndex == 0 && uiManager != null)
-        {
-            uiManager.Oyuncu1EliniGoster(siradakiOyuncu);
-        }
-        SonrakiOyuncununHamlesiniBaslat();
-    }
-
 
     void SonrakiOyuncununHamlesiniBaslat()
     {
         oynananElSayisiBuTurda++;
-        if (oynananElSayisiBuTurda >= oyuncuSayisi)
+        
+        
+        if (oynananElSayisiBuTurda >= oyuncuSayisi && aktifOyuncuIndex == oyuncuSayisi - 1) 
         {
-            Debug.Log("---- BÝR TAM TUR BÝTTÝ (Her oyuncu birer el oynadý) ----");
-            return;
+            Debug.Log("---- BÝR TAM TUR BÝTTÝ (Herkes birer el oynadý) ----");
+            oynananElSayisiBuTurda = 0; 
+            
         }
         SiradakiOyuncuyaGec();
     }
@@ -454,13 +270,127 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log(oyuncular[aktifOyuncuIndex].oyuncuAdi + ", yanda henüz atýlmýþ taþ yok.");
         }
-        NormalOyuncuTurunuOyna();
+
+        
+        if (aktifOyuncuIndex == 0)
+        {
+            Debug.Log(oyuncular[aktifOyuncuIndex].oyuncuAdi + " hamlesini UI üzerinden yapacak.");
+            GuncelOyuncununEliniUIDaGoster();
+        }
+        else 
+        {
+            NormalOyuncuTurunuOyna(); 
+        }
     }
 
+    
+    void NormalOyuncuTurunuOyna()
+    {
+        if (oyuncular.Count == 0 || aktifOyuncuIndex >= oyuncular.Count) return;
+
+        Oyuncu siradakiOyuncu = oyuncular[aktifOyuncuIndex];
+        Debug.Log("---- " + siradakiOyuncu.oyuncuAdi + " (Otomatik BOT Hamlesi) Oynuyor ----");
+
+        bool yandanTasAldi = false;
+        Tas sonYereAtilanTas = null;
+
+        if (atilanTaslarYigini.Count > 0)
+        {
+            sonYereAtilanTas = atilanTaslarYigini[atilanTaslarYigini.Count - 1];
+            if (OyuncuYandanAlmakIsterMi(siradakiOyuncu, sonYereAtilanTas))
+            {
+                siradakiOyuncu.TasaEkle(sonYereAtilanTas);
+                atilanTaslarYigini.RemoveAt(atilanTaslarYigini.Count - 1);
+                yandanTasAldi = true;
+                Debug.Log(siradakiOyuncu.oyuncuAdi + " (BOT) yandan þu taþý aldý: " + sonYereAtilanTas.ToString());
+            }
+        }
+
+        if (!yandanTasAldi)
+        {
+            if (desteManager.KalanTasSayisi() > 0)
+            {
+                Tas cekilenTas = desteManager.TasCek();
+                siradakiOyuncu.TasaEkle(cekilenTas); 
+                if (cekilenTas != null)
+                {
+                    Debug.Log(siradakiOyuncu.oyuncuAdi + " (BOT) yerden þu taþý çekti: " + cekilenTas.ToString());
+                }
+                else
+                { 
+                    Debug.LogWarning(siradakiOyuncu.oyuncuAdi + " (BOT) yerden null bir taþ çekti (deste bitti).");
+                }
+            }
+            else
+            {
+                Debug.LogWarning(siradakiOyuncu.oyuncuAdi + " (BOT) yerden taþ çekemedi, destede taþ kalmamýþ!");
+                
+            }
+        }
+
+        
+
+       
+        if (siradakiOyuncu.eli.Count > 0)
+        {
+            int atilacakIndex = 0; 
+            
+            if (siradakiOyuncu.eli.Count > 1)
+            {
+                Tas sonTas = siradakiOyuncu.eli[siradakiOyuncu.eli.Count - 1]; 
+                bool sonTasDegerli = (this.okeyTasi != null && sonTas == this.okeyTasi) || sonTas.tip == TasTipi.SahteOkey;
+
+                if (sonTasDegerli)
+                { 
+                    bool degersizBulundu = false;
+                    for (int k = 0; k < siradakiOyuncu.eli.Count; k++)
+                    {
+                        Tas potansiyel = siradakiOyuncu.eli[k];
+                        if (!((this.okeyTasi != null && potansiyel == this.okeyTasi) || potansiyel.tip == TasTipi.SahteOkey))
+                        {
+                            atilacakIndex = k;
+                            degersizBulundu = true;
+                            break;
+                        }
+                    }
+                    if (!degersizBulundu) atilacakIndex = siradakiOyuncu.eli.Count - 1; 
+                }
+                else
+                {
+                    atilacakIndex = siradakiOyuncu.eli.Count - 1; 
+                }
+            }
+
+            Tas atilanTas = siradakiOyuncu.eli[atilacakIndex];
+            if (atilanTas != null)
+            {
+                siradakiOyuncu.eli.RemoveAt(atilacakIndex);
+                atilanTaslarYigini.Add(atilanTas);
+                Debug.Log(siradakiOyuncu.oyuncuAdi + " (BOT) þu taþý attý: " + atilanTas.ToString());
+                if (atilanTaslarYigini.Count > 0)
+                    Debug.Log("Yandaki Son Taþ: " + atilanTaslarYigini[atilanTaslarYigini.Count - 1].ToString());
+            }
+            else
+            {
+                Debug.LogError(siradakiOyuncu.oyuncuAdi + " (BOT) null taþ atmaya çalýþtý! Index: " + atilacakIndex);
+                siradakiOyuncu.eli.RemoveAt(atilacakIndex);
+            }
+        }
+        else
+        {
+            Debug.LogWarning(siradakiOyuncu.oyuncuAdi + " (BOT) elinde atacak taþý kalmadý!");
+        }
+
+        
+        SonrakiOyuncununHamlesiniBaslat();
+    }
+
+    
     bool OyuncuYandanAlmakIsterMi(Oyuncu oyuncu, Tas yandanAlinabilecekTas)
     {
         if (yandanAlinabilecekTas == null) return false;
 
+        
         if (this.okeyTasi != null && yandanAlinabilecekTas == this.okeyTasi)
         {
             return true;
@@ -469,6 +399,7 @@ public class GameManager : MonoBehaviour
         {
             return true;
         }
+        
         if (yandanAlinabilecekTas.tip == TasTipi.Sayi)
         {
             foreach (Tas eldekiTas in oyuncu.eli)
@@ -479,49 +410,36 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
-        return false;
+        return false; 
     }
-    public bool SiraKimdeyseOAtar(Tas atilanTas)
+
+    
+    void GuncelOyuncununEliniUIDaGoster()
     {
-        if (oyuncular.Count == 0 || aktifOyuncuIndex >= oyuncular.Count)
+        if (uiManager != null && oyuncular.Count > aktifOyuncuIndex)
         {
-            Debug.LogError("SiraKimdeyseOAtar: Geçerli aktif oyuncu yok!");
-            return false;
-        }
-
-        Oyuncu oynayanOyuncu = oyuncular[aktifOyuncuIndex];
-
-        
-        if (oynayanOyuncu.eli.Contains(atilanTas))
-        {
-            oynayanOyuncu.eli.Remove(atilanTas);
-            atilanTaslarYigini.Add(atilanTas);
-
-            Debug.Log(oynayanOyuncu.oyuncuAdi + " UI üzerinden sürükleyerek þu taþý attý: " + atilanTas.ToString());
-
-            if (atilanTaslarYigini.Count > 0)
-                Debug.Log("Yandaki Son Taþ: " + atilanTaslarYigini[atilanTaslarYigini.Count - 1].ToString());
-
-           
-            if (aktifOyuncuIndex == 0 && uiManager != null) 
+            
+            if (aktifOyuncuIndex == 0)
             {
-                uiManager.Oyuncu1EliniGoster(oynayanOyuncu);
+                uiManager.Oyuncu1EliniGoster(oyuncular[aktifOyuncuIndex]);
             }
-           
+            
+        }
+    }
 
-           
-            SonrakiOyuncununHamlesiniBaslat(); 
-            return true; 
+    public void OyuncuCiftAcmakIstedi(Oyuncu oyuncu)
+    {
+        
+        if (oyuncu == null) return;
+
+        if (oyuncu.CiftAcilabilirMi())
+        {
+            oyuncu.ciftAcilmisMi = true;
+            Debug.Log(oyuncu.oyuncuAdi + " çift açtý!");
         }
         else
         {
-            Debug.LogError(oynayanOyuncu.oyuncuAdi + " elinde olmayan bir taþý (" + atilanTas.ToString() + ") atmaya çalýþtý!");
-            
-            if (aktifOyuncuIndex == 0 && uiManager != null)
-            {
-                uiManager.Oyuncu1EliniGoster(oynayanOyuncu);
-            }
-            return false; 
+            Debug.Log(oyuncu.oyuncuAdi + " çift açmayý denedi ama yeterli çifti yok.");
         }
     }
-} 
+}

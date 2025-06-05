@@ -55,7 +55,9 @@ public class UIManager : MonoBehaviour
                 UITasEtkilesimi tasEtkilesimScripti = yeniTasUIObjesi.GetComponent<UITasEtkilesimi>();
                 if (tasEtkilesimScripti != null)
                 {
-                    tasEtkilesimScripti.Ayarla(tasVerisi, this);
+                    
+                    tasEtkilesimScripti.Ayarla(tasVerisi, this, oyuncu1ElPaneliTransform);
+                    
                 }
 
                 Image tasResmi = yeniTasUIObjesi.GetComponent<Image>();
@@ -149,6 +151,31 @@ public class UIManager : MonoBehaviour
             {
                 
                 Debug.LogWarning("UIManager: Taş atma işlemi GameManager tarafından onaylanmadı.");
+            }
+        }
+    }
+    public void OyuncuTasAttiYerineBirakti(UITasEtkilesimi atilanTasUIScripti)
+    {
+        if (atilanTasUIScripti == null || atilanTasUIScripti.temsilEttigiTas == null) return;
+
+        Tas atilanTasDetayi = atilanTasUIScripti.temsilEttigiTas;
+        Debug.Log("UIManager: " + atilanTasDetayi.ToString() + " taşı atılmak üzere GameManager'a bildiriliyor.");
+
+        if (gameManager != null)
+        {
+            
+            bool atmaBasarili = gameManager.SiraKimdeyseOAtar(atilanTasDetayi); 
+            if (atmaBasarili)
+            {
+                
+            }
+            else
+            {
+                
+                Debug.LogWarning("UIManager: Taş atma işlemi GameManager tarafından onaylanmadı. Taş geri yerine konulmalı.");
+                
+                if (gameManager != null && gameManager.oyuncular.Count > gameManager.AktifOyuncuIndex) 
+                    Oyuncu1EliniGoster(gameManager.oyuncular[gameManager.AktifOyuncuIndex]);
             }
         }
     }
